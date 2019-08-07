@@ -27,7 +27,7 @@
       throw new Error('Error getting registration data!');
     }).then(CBOR.decode).then(function(challenge) {
       return new Promise(function(resolve, reject) {
-        u2f.register('https://localhost:5000', [{
+        u2f.register('https://localhost:5000/facets.json', [{
           challenge: challenge,
           version: 'U2F_V2'
         }], [], function(resp) {

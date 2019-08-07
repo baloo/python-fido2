@@ -41,8 +41,9 @@ from fido2.ctap2 import AttestationObject, AuthenticatorData
 from fido2.ctap1 import RegistrationData
 from fido2.utils import sha256, websafe_encode
 from fido2 import cbor
-from flask import Flask, session, request, redirect, abort
+from flask import Flask, session, request, redirect, abort, Response
 
+import json
 import os
 
 
@@ -52,7 +53,7 @@ app.secret_key = os.urandom(32)  # Used for session.
 rp = RelyingParty('localhost', 'Demo server')
 # By using the U2FFido2Server class, we can support existing credentials
 # registered by the legacy u2f.register API for an appId.
-server = U2FFido2Server('https://localhost:5000', rp)
+server = U2FFido2Server('https://localhost:5000/facets.json', rp)
 
 # Registered credentials are stored globally, in memory only. Single user
 # support, state is lost when the server terminates.
@@ -176,6 +177,13 @@ def u2f_complete():
     credentials.append(auth_data.credential_data)
     print('REGISTERED U2F CREDENTIAL:', auth_data.credential_data)
     return cbor.encode({'status': 'OK'})
+
+
+@app.route('/facets.json', methods=['GET'])
+def facets():
+    ct = "application/fido.trusted-apps+json"
+    data =  json.dumps({"trustedFacets": [{"version": {"major": 1, "minor": 0}, "ids": ["https://localhost:5000"]}]})  # noqa
+    return Response(data, mimetype=ct)
 
 
 if __name__ == '__main__':
